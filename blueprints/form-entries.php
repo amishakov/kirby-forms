@@ -4,7 +4,7 @@ return function ($kirby) {
   $url = $kirby->urls()->current();
   preg_match('/\/pages\/([a-zA-Z0-9+-]+)\/?/', $url, $result);
   $slug = str_replace('+', '/', $result[1]);
-  $formPage = page($slug) ?? site()->index()->drafts()->find($slug);
+  $formPage = page($slug) ?? site()->index(true)->find($slug);
 
   if (null === $formPage) {
     return [];
