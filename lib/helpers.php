@@ -12,7 +12,7 @@ function formFieldAttributes($id, $field, $form): array {
   $errorMessage = $form->error($name)[0] ?? null;
   $hasError = !!$form->error($name);
   $default = $field->default()->value();
-  $value = $form->old($name) ?? $default;
+  $value = $form->old($name, $default);
   $defaultPlaceholder = option('arnoson.kirby-form-builder.addEmptyPlaceholder')
     ? '  ' // We need two spaces, otherwise kirby will show a warning.
     : null;
