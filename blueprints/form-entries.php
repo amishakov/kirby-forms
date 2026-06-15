@@ -1,12 +1,8 @@
 <?php
 
 return function ($kirby) {
-  $url = $kirby->urls()->current();
-  preg_match('/\/pages\/([a-zA-Z0-9+-]+)\/?/', $url, $result);
-  $slug = str_replace('+', '/', $result[1]);
-  $formPage = page($slug) ?? site()->index(true)->find($slug);
-
-  if (null === $formPage) {
+  $formPage = KirbyFormBuilder()->pageFromPanelContext();
+  if (!$formPage) {
     return [];
   }
 
@@ -43,6 +39,7 @@ return function ($kirby) {
         'image' => false,
         'columns' => $columns,
         'sortBy' => 'form_submitted desc',
+        'template' => 'form-entry',
       ],
     ],
   ];

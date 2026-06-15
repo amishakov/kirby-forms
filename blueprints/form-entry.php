@@ -1,14 +1,14 @@
 <?php
 
 use Kirby\Toolkit\Str;
+use Kirby\Uuid\Uuid;
 
 return function ($kirby) {
-  $url = $kirby->urls()->current();
-
   // This blueprint gets called in the entries tab because of the form entries
   // and export sections. But at this point the url is still the form page, not the form
   // entry.
   // TODO: find a more robust way of handling this.
+  $url = $kirby->urls()->current();
   if (
     Str::endsWith($url, '/sections/form_entries') ||
     Str::endsWith($url, '/sections/form_export')
@@ -16,14 +16,13 @@ return function ($kirby) {
     return [];
   }
 
-  $result = preg_match('/\/pages\/([a-zA-Z0-9+-]+)\/?/', $url, $matches);
-  if (!$result) {
+  /** @var Kirby\Cms\Page */
+  $entryPage = KirbyFormBuilder()->pageFromPanelContext();
+  if (!$entryPage) {
     return;
   }
-  $slug = str_replace('+', '/', $matches[1]);
-  /** @var Kirby\Cms\Page */
-  $entryPage = page($slug) ?? site()->index()->drafts()->find($slug);
   $formPage = $entryPage->parent();
+  $uuid = Uuid::generate();
 
   $blueprint = [
     'options' => [
@@ -32,6 +31,12 @@ return function ($kirby) {
       'changeTemplate' => false,
       'duplicate' => false,
       'move' => false,
+    ],
+    'create' => [
+      // Title is auto-generated from the form submission date, but since it can't be empty here we have to provide something.
+      'title' => $uuid,
+      'slug' => $uuid,
+      'form_submitted' => date('c'),
     ],
     'type' => 'fields',
     'fields' => [
@@ -43,30 +48,6 @@ return function ($kirby) {
       ],
     ],
   ];
-
-  if (!$formPage) {
-    $blueprint['fields']['form_error'] = [
-      'type' => 'info',
-      'theme' => 'negative',
-      'text' => tt(
-        'arnoson.kirby-form-builder.form-not-found',
-        replace: ['name' => $slug],
-      ),
-    ];
-    return $blueprint;
-  }
-
-  if (!$entryPage) {
-    $blueprint['fields']['form_entry_error'] = [
-      'type' => 'info',
-      'theme' => 'negative',
-      'text' => tt(
-        'arnoson.kirby-form-builder.form-entry-not-found',
-        replace: ['name' => $slug],
-      ),
-    ];
-    return $blueprint;
-  }
 
   $formFields = KirbyFormBuilder()->formFields($formPage);
   if (!count($formFields)) {

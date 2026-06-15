@@ -18,6 +18,35 @@ class KirbyFormBuilder {
     return Str::slug($page->uuid());
   }
 
+  /**
+   * Resolve a Kirby page from the current panel context. In dialog requests
+   * the current URL does not contain the page slug, so we fall back to the
+   * 'view' query parameter.
+   */
+  function pageFromPanelContext(): ?Page {
+    $kirby = kirby();
+    $url = $kirby->urls()->current();
+    if (Str::contains($url, '/panel/dialogs/')) {
+      $url = $kirby->request()->query()->get('view') ?? '';
+    }
+    if (!preg_match('/\/pages\/([a-zA-Z0-9+-]+)\/?/', $url, $matches)) {
+      return null;
+    }
+    $slug = str_replace('+', '/', $matches[1]);
+    // Kirby's `site()->index(true)->find()` doesn't find pages inside drafts,
+    // so we have to find the page manually here.
+    $parts = explode('/', $slug);
+    $current = site();
+    foreach ($parts as $part) {
+      $current =
+        $current->children()->find($part) ?? $current->drafts()->find($part);
+      if (!$current) {
+        return null;
+      }
+    }
+    return $current instanceof Page ? $current : null;
+  }
+
   function formFields(Page $formPage): array {
     $formFields = [];
     foreach ($formPage->form_fields()->toLayouts() as $layout) {
