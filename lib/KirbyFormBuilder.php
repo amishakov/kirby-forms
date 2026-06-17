@@ -26,7 +26,7 @@ class KirbyFormBuilder {
   function pageFromPanelContext(): ?Page {
     $kirby = kirby();
     $url = $kirby->urls()->current();
-    if (Str::contains($url, '/panel/dialogs/')) {
+    if (Str::contains($url, '/dialogs/')) {
       $url = $kirby->request()->query()->get('view') ?? '';
     }
     if (!preg_match('/\/pages\/([a-zA-Z0-9+-]+)\/?/', $url, $matches)) {
